@@ -13,7 +13,7 @@ class DarkSkyAPIClient {
     
     var baseURL: URL {
         return URL(string: "https://api.darksky.net/forecast/\(self.apiKey)/")!
-    }()
+    }
     
     let downloader = JSONDownloader()
     
@@ -28,17 +28,20 @@ class DarkSkyAPIClient {
         let request = URLRequest(url: url)
         
         let task = downloader.jsonTask(with: request) { (json, error) in
-            guard let json = json else {
-                completion(nil, error)
-                return
-            }
             
-            guard let currentWeatherJson = json["currently"] as? [String: AnyObject], let currentWeather = CurrentWeather(json: currentWeatherJson) else {
-                completion(nil, .JSONParsinFailure)
-                return
+            DispatchQueue.main.async {
+                guard let json = json else {
+                    completion(nil, error)
+                    return
+                }
+                
+                guard let currentWeatherJson = json["currently"] as? [String: AnyObject], let currentWeather = CurrentWeather(json: currentWeatherJson) else {
+                    completion(nil, .JSONParsinFailure)
+                    return
+                }
+                
+                completion(currentWeather, nil)
             }
-            
-            completion(currentWeather, nil)
         }
         
         task.resume()

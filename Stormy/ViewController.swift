@@ -18,28 +18,13 @@ class ViewController: UIViewController {
     @IBOutlet weak var refreshButton: UIButton!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
-    fileprivate let darkSkyApiKey = "79a4ff6b5ce497ff0f5ff19641113eef"
+    let client = DarkSkyAPIClient()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
-        let currentWeather = CurrentWeather(temperature: 85.0, humidity: 0.8, precipitationProbability: 0.1, summary: "Hot!", icon: "clear-day")
-        let currentWeatherViewModel = CurrentWeatherViewModel(model: currentWeather)
-        
-        displayWeather(using: currentWeatherViewModel)
-        
-        let base = URL(string: "https://api.darksky.net/forecast/\(darkSkyApiKey)/")
-        guard let forecastURL = URL(string: "37.8267,-122.4233", relativeTo: base) else { return }
-        
-        let configuration = URLSessionConfiguration.default
-        let session = URLSession(configuration: configuration)
-        let request = URLRequest(url: forecastURL)
-        
-        let dataTask = session.dataTask(with: request) { (data, response, error) in
-            
-        }
-        dataTask.resume()
+        getCurrentWeather()
     }
 
     override func didReceiveMemoryWarning() {
@@ -54,6 +39,36 @@ class ViewController: UIViewController {
         currentSummaryLabel.text = viewModel.summary
         currentWeatherIcon.image = viewModel.icon
     }
+    
+    @IBAction func getCurrentWeather() {
+        
+        toggleRefreshAnimation(on: true)
+        
+        let coordinate = Coordinate(longitude: 21.012228700000037, latitude: 52.2296756)
+        
+        client.getCurrentWeather(at: coordinate) { [unowned self] (currentWeather, error) in
+            if let currentWeather = currentWeather {
+                let viewModel = CurrentWeatherViewModel(model: currentWeather)
+                self.displayWeather(using: viewModel)
+                self.toggleRefreshAnimation(on: false)
+            } else {
+                let alert = UIAlertController(title: "Can't display weather info", message: "Check your internet connection", preferredStyle: UIAlertControllerStyle.alert)
+                alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: nil))
+                self.present(alert, animated: true, completion: nil)
+            }
+        }
+    }
+    
+    func toggleRefreshAnimation(on: Bool) {
+        refreshButton.isHidden = on
+        
+        if on {
+            activityIndicator.stopAnimating()
+        } else {
+            activityIndicator.stopAnimating()
+        }
+    }
+    
 }
 
 
