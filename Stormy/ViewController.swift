@@ -37,7 +37,7 @@ class ViewController: UIViewController {
         let request = URLRequest(url: forecastURL)
         
         let dataTask = session.dataTask(with: request) { (data, response, error) in
-            print(data)
+            
         }
         dataTask.resume()
     }
